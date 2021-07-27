@@ -33,6 +33,7 @@ repositories {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.ws:spring-ws-core'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -46,7 +47,8 @@ test {
 }
 
 wsdl2java {
+    encoding = 'utf-8'
     wsdlsToGenerate = [
-            ["$projectDir/src/main/resources/wsdl/DailyInfoWebServ.wsdl"]
+            [ '-p' , 'ru.proskuryakov.cbrcursondateadapter.cbr.wsdl' , '-autoNameResolution' ,"$projectDir/src/main/resources/wsdl/DailyInfoWebServ.wsdl"]
     ]
 }
