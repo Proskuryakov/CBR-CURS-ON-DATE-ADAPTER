@@ -1,8 +1,21 @@
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "com.yupzip:wsdl2java:2.0"
+    }
+}
+
 plugins {
     id 'org.springframework.boot' version '2.5.3'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'java'
 }
+
+apply plugin: "com.yupzip.wsdl2java"
 
 group = 'ru.proskyryakov'
 version = '0.0.1-SNAPSHOT'
@@ -23,8 +36,17 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    wsdl2java 'com.sun.xml.bind:jaxb-xjc:2.3.0.1'
+    compileOnly 'com.sun.xml.bind:jaxb-xjc:2.3.0.1'
 }
 
 test {
     useJUnitPlatform()
+}
+
+wsdl2java {
+    wsdlsToGenerate = [
+            ["$projectDir/src/main/resources/wsdl/DailyInfoWebServ.wsdl"]
+    ]
 }
