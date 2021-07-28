@@ -1,0 +1,16 @@
+cbr:
+  uri: 'http://www.cbr.ru/DailyInfoWebServ/DailyInfo.asmx'
+
+logging:
+  level:
+    org:
+      springframework:
+        ws:
+          client:
+            MessageTracing:
+              sent: DEBUG
+              received: TRACE
+          server:
+            MessageTracing:
+              sent: DEBUG
+              received: TRACE
