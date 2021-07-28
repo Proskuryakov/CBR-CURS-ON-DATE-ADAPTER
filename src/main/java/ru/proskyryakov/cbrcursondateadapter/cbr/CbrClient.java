@@ -12,28 +12,27 @@ import ru.proskuryakov.cbrcursondateadapter.cbr.wsdl.GetCursOnDateXMLResponse;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
 
 public class CbrClient extends WebServiceGatewaySupport {
 
     private static final Logger log = LoggerFactory.getLogger(CbrClient.class);
-    @Value("${cbr.url}")
-    private String cbrUrl;
+    @Value("${cbr.uri}")
+    private String cbrUri;
 
     public GetCursOnDateXMLResponse getCursOnDateXMLResponse(GregorianCalendar date){
         GetCursOnDateXML request  = new GetCursOnDateXML();
+
         try {
             XMLGregorianCalendar calendar = DatatypeFactory.newInstance().newXMLGregorianCalendar(date);
+            log.info(calendar.toXMLFormat());
             request.setOnDate(calendar);
         } catch (DatatypeConfigurationException e) {
             e.printStackTrace();
         }
 
-        GetCursOnDateXMLResponse response = (GetCursOnDateXMLResponse) getWebServiceTemplate()
-                .marshalSendAndReceive(cbrUrl, request, new SoapActionCallback(cbrUrl));
-
-        return response;
+        return (GetCursOnDateXMLResponse) getWebServiceTemplate()
+                .marshalSendAndReceive(request, new SoapActionCallback("http://web.cbr.ru/GetCursOnDateXML"));
 
     }
 

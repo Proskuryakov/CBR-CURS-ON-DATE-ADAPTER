@@ -20,13 +20,11 @@ public class CbrCursOnDateAdapterApplication {
     @Bean
     CommandLineRunner lookup(CbrClient client) {
         return args -> {
-            String country = "Spain";
 
-            if (args.length > 0) {
-                country = args[0];
-            }
-            GetCursOnDateXMLResponse response = client.getCursOnDateXMLResponse(new GregorianCalendar(2021, Calendar.JULY, 27));
-            System.err.println(response.getGetCursOnDateXMLResult().getContent());
+            var date = new GregorianCalendar(2021, Calendar.JULY, 27);
+            GetCursOnDateXMLResponse response = client.getCursOnDateXMLResponse(date);
+            System.out.println(response.getGetCursOnDateXMLResult().getContent());
+
         };
     }
 
