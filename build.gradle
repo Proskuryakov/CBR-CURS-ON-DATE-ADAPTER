@@ -53,6 +53,7 @@ wsdl2java {
             [ '-p' , 'ru.proskuryakov.cbrcursondateadapter.cbr.wsdl' ,
               '-autoNameResolution',
               '-b', 'http://www.w3.org/2001/XMLSchema.xsd',
+              '-b', "$projectDir/src/main/resources/xsd/ValuteData.xsd",
               'http://www.cbr.ru/DailyInfoWebServ/DailyInfo.asmx?WSDL'
             ]
     ]
