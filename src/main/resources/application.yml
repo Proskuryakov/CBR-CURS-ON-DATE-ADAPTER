@@ -1,5 +1,7 @@
 cbr:
   uri: 'http://www.cbr.ru/DailyInfoWebServ/DailyInfo.asmx'
+  wsdl:
+    GenerationPackage: 'ru.proskuryakov.cbrcursondateadapter.cbr.wsdl'
 
 logging:
   level:
@@ -8,9 +10,5 @@ logging:
         ws:
           client:
             MessageTracing:
-              sent: DEBUG
-              received: TRACE
-          server:
-            MessageTracing:
-              sent: DEBUG
+              sent: TRACE
               received: TRACE
