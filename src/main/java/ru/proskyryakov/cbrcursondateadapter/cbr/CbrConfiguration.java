@@ -9,8 +9,8 @@ import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 @Configuration
 public class CbrConfiguration {
 
-    @Value("${cbr.url}")
-    private String cbrUrl;
+    @Value("${cbr.uri}")
+    private String cbrUri;
     @Value("${cbr.wsdl.GenerationPackage}")
     private String generationPackage;
 
@@ -25,7 +25,7 @@ public class CbrConfiguration {
     @Bean
     public CbrClient cbrClient(Jaxb2Marshaller marshaller) {
         CbrClient client = new CbrClient();
-        client.setDefaultUri(cbrUrl);
+        client.setDefaultUri(cbrUri);
         client.setMarshaller(marshaller);
         client.setUnmarshaller(marshaller);
         return client;
