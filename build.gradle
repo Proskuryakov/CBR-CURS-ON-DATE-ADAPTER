@@ -47,8 +47,13 @@ test {
 }
 
 wsdl2java {
+    System.setProperty('javax.xml.accessExternalDTD', 'all')
     encoding = 'utf-8'
     wsdlsToGenerate = [
-            [ '-p' , 'ru.proskuryakov.cbrcursondateadapter.cbr.wsdl' , '-autoNameResolution' ,"$projectDir/src/main/resources/wsdl/DailyInfoWebServ.wsdl"]
+            [ '-p' , 'ru.proskuryakov.cbrcursondateadapter.cbr.wsdl' ,
+              '-autoNameResolution',
+              '-b', 'http://www.w3.org/2001/XMLSchema.xsd',
+              'http://www.cbr.ru/DailyInfoWebServ/DailyInfo.asmx?WSDL'
+            ]
     ]
 }
