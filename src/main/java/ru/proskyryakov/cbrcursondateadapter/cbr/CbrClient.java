@@ -8,14 +8,23 @@ import org.springframework.ws.client.core.support.WebServiceGatewaySupport;
 import org.springframework.ws.soap.client.core.SoapActionCallback;
 import ru.proskuryakov.cbrcursondateadapter.cbr.wsdl.GetCursOnDateXML;
 import ru.proskuryakov.cbrcursondateadapter.cbr.wsdl.GetCursOnDateXMLResponse;
+import ru.proskuryakov.cbrcursondateadapter.cbr.wsdl.ValuteData;
 
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import java.util.GregorianCalendar;
+import java.util.List;
 
 public class CbrClient extends WebServiceGatewaySupport {
 
     private static final Logger log = LoggerFactory.getLogger(CbrClient.class);
+
+    public List<ValuteData.ValuteCursOnDate> getValuteCursOnDate(GregorianCalendar date) {
+        GetCursOnDateXMLResponse response = getCursOnDateXMLResponse(date);
+
+        ValuteData valuteData = (ValuteData) response.getGetCursOnDateXMLResult().getContent().get(0);
+        return  valuteData.getValuteCursOnDate();
+    }
 
     @SneakyThrows
     public GetCursOnDateXMLResponse getCursOnDateXMLResponse(GregorianCalendar date){
