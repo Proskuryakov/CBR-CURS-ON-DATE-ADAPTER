@@ -19,6 +19,11 @@ public class CursController {
         return cursService.getCursByCode(code);
     }
 
+    @GetMapping("/{code}/date/{date}")
+    public CursOnDate getCursByCodeAndDate(@PathVariable String code, @PathVariable String date){
+        return cursService.getCursByCodeAndDate(code, date);
+    }
+
 
 
 }
