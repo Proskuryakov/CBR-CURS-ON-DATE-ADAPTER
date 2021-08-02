@@ -3,6 +3,9 @@ cbr:
   wsdl:
     GenerationPackage: 'ru.proskuryakov.cbrcursondateadapter.cbr.wsdl'
 
+cache:
+  SaveTime: 60
+
 #logging:
 #  level:
 #    org:
