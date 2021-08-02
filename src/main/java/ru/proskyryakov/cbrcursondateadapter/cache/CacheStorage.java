@@ -1,6 +1,5 @@
 package ru.proskyryakov.cbrcursondateadapter.cache;
 
-import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -21,28 +20,14 @@ public class CacheStorage<K, V> {
     }
 
     public void add(K key, V value) {
-        cache.put(key, new DateValue<>(value, saveTime));
+        cache.put(key, new DateValue<V>(value, saveTime));
     }
 
     public V get(K key) {
         var dateValue = cache.get(key);
         if(dateValue == null) return null;
-        return dateValue.value;
+        return dateValue.getValue();
     }
 
-    private static class DateValue<V> {
-        public V value;
-        public Date date;
-
-        public DateValue(V value, Long saveTime) {
-            this.value = value;
-            date = new Date();
-            date.setTime(date.getTime() + saveTime);
-        }
-
-        public boolean isLive() {
-            return date.getTime() > new Date().getTime();
-        }
-    }
 
 }
