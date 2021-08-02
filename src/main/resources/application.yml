@@ -3,12 +3,12 @@ cbr:
   wsdl:
     GenerationPackage: 'ru.proskuryakov.cbrcursondateadapter.cbr.wsdl'
 
-logging:
-  level:
-    org:
-      springframework:
-        ws:
-          client:
-            MessageTracing:
-              sent: TRACE
-              received: TRACE
+#logging:
+#  level:
+#    org:
+#      springframework:
+#        ws:
+#          client:
+#            MessageTracing:
+#              sent: TRACE
+#              received: TRACE

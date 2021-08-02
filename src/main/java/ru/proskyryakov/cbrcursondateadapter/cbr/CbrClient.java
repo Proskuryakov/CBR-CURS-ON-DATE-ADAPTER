@@ -17,8 +17,6 @@ import java.util.List;
 
 public class CbrClient extends WebServiceGatewaySupport {
 
-    private static final Logger log = LoggerFactory.getLogger(CbrClient.class);
-
     public List<ValuteData.ValuteCursOnDate> getValuteCursOnDate(GregorianCalendar date) {
         GetCursOnDateXMLResponse response = getCursOnDateXMLResponse(date);
 
@@ -36,7 +34,6 @@ public class CbrClient extends WebServiceGatewaySupport {
     }
 
     public Object getResponse(Object request, String soapAction) {
-        log.info("Execute request " + soapAction);
         return getWebServiceTemplate().marshalSendAndReceive(request, new SoapActionCallback(soapAction));
     }
 
