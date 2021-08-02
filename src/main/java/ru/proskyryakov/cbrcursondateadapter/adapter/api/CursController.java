@@ -1,12 +1,12 @@
 package ru.proskyryakov.cbrcursondateadapter.adapter.api;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import ru.proskyryakov.cbrcursondateadapter.adapter.models.CodeWithDates;
 import ru.proskyryakov.cbrcursondateadapter.adapter.models.CursOnDate;
 import ru.proskyryakov.cbrcursondateadapter.adapter.services.CursService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/curs")
@@ -24,6 +24,10 @@ public class CursController {
         return cursService.getCursByCodeAndDate(code, date);
     }
 
+    @PostMapping
+    public List<CursOnDate> getCursByDates(@RequestBody CodeWithDates codeWithDates){
+        return cursService.getCursByDates(codeWithDates);
+    }
 
 
 }
