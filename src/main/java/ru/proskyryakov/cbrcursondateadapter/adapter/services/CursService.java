@@ -2,6 +2,8 @@ package ru.proskyryakov.cbrcursondateadapter.adapter.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import ru.proskyryakov.cbrcursondateadapter.adapter.mappers.CursMapper;
 import ru.proskyryakov.cbrcursondateadapter.adapter.models.CodeWithDates;
@@ -19,6 +21,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class CursService {
+
+    private static final Logger log = LoggerFactory.getLogger(CursService.class);
+
     private final CbrClient client;
     private final CursMapper cursMapper;
 
@@ -37,6 +42,12 @@ public class CursService {
     }
 
     public CursOnDate getCursByCodeAndDate(String code, GregorianCalendar calendar) {
+        log.info(
+                "Send request with code {} on date {}",
+                code.toUpperCase(),
+                calendar.toZonedDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        );
+
         var curses = client.getValuteCursOnDate(calendar);
         var curse = curses.stream()
                 .filter(c -> c.getVchCode().equalsIgnoreCase(code))
