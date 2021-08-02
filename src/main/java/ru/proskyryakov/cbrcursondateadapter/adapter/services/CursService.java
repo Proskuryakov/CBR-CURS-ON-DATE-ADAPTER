@@ -5,8 +5,10 @@ import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import ru.proskuryakov.cbrcursondateadapter.cbr.wsdl.ValuteData;
 import ru.proskyryakov.cbrcursondateadapter.adapter.mappers.CursMapper;
 import ru.proskyryakov.cbrcursondateadapter.adapter.models.CodeWithDates;
+import ru.proskyryakov.cbrcursondateadapter.cache.CacheStorage;
 import ru.proskyryakov.cbrcursondateadapter.cbr.CbrClient;
 import ru.proskyryakov.cbrcursondateadapter.adapter.models.CursOnDate;
 
@@ -26,6 +28,7 @@ public class CursService {
 
     private final CbrClient client;
     private final CursMapper cursMapper;
+    private final CacheStorage<String, ValuteData.ValuteCursOnDate> cursOnDateCache;
 
     public CursOnDate getCursByCode(String code) {
         var currentDate = new GregorianCalendar();
@@ -42,16 +45,28 @@ public class CursService {
     }
 
     public CursOnDate getCursByCodeAndDate(String code, GregorianCalendar calendar) {
-        log.info(
-                "Send request with code {} on date {}",
-                code.toUpperCase(),
-                calendar.toZonedDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        );
+        var key = genKey(code, calendar);
+        var curse = cursOnDateCache.get(key);
 
-        var curses = client.getValuteCursOnDate(calendar);
-        var curse = curses.stream()
-                .filter(c -> c.getVchCode().equalsIgnoreCase(code))
-                .findAny().orElse(null);
+        if (curse == null) {
+            log.info(
+                    "Send request with code {} on date {}",
+                    code.toUpperCase(),
+                    calendar.toZonedDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+            );
+
+            var curses = client.getValuteCursOnDate(calendar);
+            curse = curses.stream()
+                    .filter(c -> c.getVchCode().equalsIgnoreCase(code))
+                    .findAny().orElse(null);
+            cursOnDateCache.add(key, curse);
+        } else{
+            log.info(
+                    "Get from cache with code {} on date {}",
+                    code.toUpperCase(),
+                    calendar.toZonedDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+            );
+        }
 
         if (curse == null) return null;
         return cursMapper.toCursOnDate(curse, calendar);
@@ -61,5 +76,9 @@ public class CursService {
         return codeWithDates.getDates().stream()
                 .map(date -> getCursByCodeAndDate(codeWithDates.getCode(), date))
                 .collect(Collectors.toList());
+    }
+
+    private String genKey(String code, GregorianCalendar calendar) {
+        return code.toUpperCase() + calendar.toZonedDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     }
 }
