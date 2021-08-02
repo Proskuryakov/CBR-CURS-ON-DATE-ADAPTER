@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentMap;
 public class CacheStorage<K, V> {
 
     public static final Long DEFAULT_SAVE_TIME = 86_400L;
+    private static final int CONVERT_COEFF = 1000;
 
     private final ConcurrentMap<K, DateValue<V>> cache;
     private final Long saveTime;
@@ -16,7 +17,9 @@ public class CacheStorage<K, V> {
 
     public CacheStorage(Long saveTime) {
         cache = new ConcurrentHashMap<>();
-        this.saveTime = saveTime;
+        this.saveTime = saveTime * CONVERT_COEFF;
+
+        new CacheCleaner<>(cache);
     }
 
     public void add(K key, V value) {
