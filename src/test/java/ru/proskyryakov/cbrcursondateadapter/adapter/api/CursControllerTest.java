@@ -52,6 +52,12 @@ class CursControllerTest {
     }
 
     @Test
+    void getCursByUncorrectCode(){
+        ResponseEntity<CursOnDate> response = restTemplate.getForEntity("/curs/DOLLAR", CursOnDate.class);
+        assertThat(response.getStatusCode(), is(HttpStatus.BAD_REQUEST));
+    }
+
+    @Test
     void getCursByCodeUsdAndDate2000_01_17() {
         ResponseEntity<CursOnDate> response = restTemplate.getForEntity("/curs/usd/date/2000-01-17", CursOnDate.class);
         assertThat(response.getStatusCode(), is(HttpStatus.OK));
@@ -62,6 +68,12 @@ class CursControllerTest {
 
         String responseDate = new SimpleDateFormat("yyyy-MM-dd").format(response.getBody().getDate());
         assertThat(responseDate, is("2000-01-17"));
+    }
+
+    @Test
+    void getCursByCodeUsdAndUncorrectDate() {
+        ResponseEntity<CursOnDate> response = restTemplate.getForEntity("/curs/usd/date/2000-01", CursOnDate.class);
+        assertThat(response.getStatusCode(), is(HttpStatus.BAD_REQUEST));
     }
 
     @Test
