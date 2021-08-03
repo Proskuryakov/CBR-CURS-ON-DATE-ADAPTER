@@ -9,9 +9,15 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 public class CursControllerAdvice {
 
     @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<ExceptionResponse> handleException(NotFoundException e) {
+    public ResponseEntity<ExceptionResponse> handleNotFoundException(NotFoundException e) {
         ExceptionResponse response = new ExceptionResponse(e.getMessage());
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(DateConversionException.class)
+    public ResponseEntity<ExceptionResponse> handleDateConversionException(DateConversionException e) {
+        ExceptionResponse response = new ExceptionResponse(e.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
 }
