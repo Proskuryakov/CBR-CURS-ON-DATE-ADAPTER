@@ -10,7 +10,6 @@ import ru.proskyryakov.cbrcursondateadapter.adapter.exceptions.DateConversionExc
 import ru.proskyryakov.cbrcursondateadapter.adapter.exceptions.NotFoundException;
 import ru.proskyryakov.cbrcursondateadapter.adapter.mappers.CursMapper;
 import ru.proskyryakov.cbrcursondateadapter.adapter.models.CodeWithDates;
-import ru.proskyryakov.cbrcursondateadapter.cache.CacheStorage;
 import ru.proskyryakov.cbrcursondateadapter.cbr.CbrClient;
 import ru.proskyryakov.cbrcursondateadapter.adapter.models.CursOnDate;
 
@@ -31,7 +30,6 @@ public class CursService {
 
     private final CbrClient client;
     private final CursMapper cursMapper;
-    private final CacheStorage<String, ValuteData.ValuteCursOnDate> cursOnDateCache;
 
     public CursOnDate getCursByCode(String code) {
         var currentDate = new GregorianCalendar();
@@ -41,7 +39,7 @@ public class CursService {
     @SneakyThrows
     public CursOnDate getCursByCodeAndDate(String code, String strDate) {
         GregorianCalendar calendar;
-        try{
+        try {
             DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
             calendar = new GregorianCalendar();
             calendar.setTime(df.parse(strDate));
@@ -55,33 +53,23 @@ public class CursService {
     @SneakyThrows
     public CursOnDate getCursByCodeAndDate(String code, GregorianCalendar calendar) {
         var key = genKey(code, calendar);
-        var curse = cursOnDateCache.get(key);
 
-        if (curse == null) {
-            log.info(
-                    "Send request with code {} on date {}",
-                    code.toUpperCase(),
-                    calendar.toZonedDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-            );
+        log.info(
+                "Send request with code {} on date {}",
+                code.toUpperCase(),
+                calendar.toZonedDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        );
 
-            var curses = client.getValuteCursOnDate(calendar);
-            try{
-                curse = curses.stream()
-                        .filter(c -> c.getVchCode().equalsIgnoreCase(code))
-                        .findAny().orElse(null);
-            } catch (NullPointerException e) {
-                throw new NotFoundException(String.format("Curs by %s code not found", code));
-            }
-
-
-            cursOnDateCache.add(key, curse);
-        } else{
-            log.info(
-                    "Get from cache with code {} on date {}",
-                    code.toUpperCase(),
-                    calendar.toZonedDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-            );
+        var curses = client.getValuteCursOnDate(calendar);
+        ValuteData.ValuteCursOnDate curse;
+        try {
+            curse = curses.stream()
+                    .filter(c -> c.getVchCode().equalsIgnoreCase(code))
+                    .findAny().orElse(null);
+        } catch (NullPointerException e) {
+            throw new NotFoundException(String.format("Curs by %s code not found", code));
         }
+
 
         if (curse == null) return null;
         return cursMapper.toCursOnDate(curse, calendar);
