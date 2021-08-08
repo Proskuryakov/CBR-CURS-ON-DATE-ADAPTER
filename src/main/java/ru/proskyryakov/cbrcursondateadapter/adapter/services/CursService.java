@@ -4,6 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.stereotype.Service;
 import ru.proskuryakov.cbrcursondateadapter.cbr.wsdl.ValuteData;
 import ru.proskyryakov.cbrcursondateadapter.adapter.exceptions.DateConversionException;
@@ -24,6 +27,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@EnableCaching
 public class CursService {
 
     private static final Logger log = LoggerFactory.getLogger(CursService.class);
@@ -55,25 +59,28 @@ public class CursService {
         var key = genKey(code, calendar);
 
         log.info(
-                "Send request with code {} on date {}",
+                "Request with code {} on date {}",
                 code.toUpperCase(),
                 calendar.toZonedDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         );
 
-        var curses = client.getValuteCursOnDate(calendar);
-        ValuteData.ValuteCursOnDate curse;
         try {
-            curse = curses.stream()
-                    .filter(c -> c.getVchCode().equalsIgnoreCase(code))
-                    .findAny().orElse(null);
+            var curse = getCursByCodeAndDateInner(code, calendar, key);
+            if (curse == null) return null;
+            return cursMapper.toCursOnDate(curse, calendar);
         } catch (NullPointerException e) {
             throw new NotFoundException(String.format("Curs by %s code not found", code));
         }
-
-
-        if (curse == null) return null;
-        return cursMapper.toCursOnDate(curse, calendar);
     }
+
+    @Cacheable(value = "curs-cache", key = "#key")
+    public ValuteData.ValuteCursOnDate getCursByCodeAndDateInner(String code, GregorianCalendar calendar, String key) {
+        return client.getValuteCursOnDate(calendar)
+                .stream()
+                .filter(c -> c.getVchCode().equalsIgnoreCase(code))
+                .findAny().orElse(null);
+    }
+
 
     public List<CursOnDate> getCursByDates(CodeWithDates codeWithDates) {
         return codeWithDates.getDates().stream()

@@ -3,8 +3,18 @@ cbr:
   wsdl:
     GenerationPackage: 'ru.proskuryakov.cbrcursondateadapter.cbr.wsdl'
 
-cache:
-  SaveTime: 60
+redis:
+  ttl: 5 # minutes
+
+spring:
+  cache:
+    type: redis
+  redis:
+    database: 0
+    host: localhost
+    port: 6379
+    password: password
+
 
 #logging:
 #  level:
