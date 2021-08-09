@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.stereotype.Service;
@@ -27,17 +26,19 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@EnableCaching
 public class CursService {
 
-    private static final Logger log = LoggerFactory.getLogger(CursService.class);
-
-    private final CbrClient client;
-    private final CursMapper cursMapper;
+    private final ValuteService valuteService;
 
     public CursOnDate getCursByCode(String code) {
         var currentDate = new GregorianCalendar();
-        return getCursByCodeAndDate(code, currentDate);
+        return valuteService.getCursByCodeAndDate(code, currentDate, genKey(code, currentDate));
+    }
+
+    public List<CursOnDate> getCursByDates(CodeWithDates codeWithDates) {
+        return codeWithDates.getDates().stream()
+                .map(date -> getCursByCodeAndDate(codeWithDates.getCode(), date))
+                .collect(Collectors.toList());
     }
 
     @SneakyThrows
@@ -51,44 +52,11 @@ public class CursService {
         } catch (ParseException e) {
             throw new DateConversionException(String.format("Incorrect date %s", strDate));
         }
-        return getCursByCodeAndDate(code, calendar);
-    }
-
-    @SneakyThrows
-    public CursOnDate getCursByCodeAndDate(String code, GregorianCalendar calendar) {
-        var key = genKey(code, calendar);
-
-        log.info(
-                "Request with code {} on date {}",
-                code.toUpperCase(),
-                calendar.toZonedDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        );
-
-        try {
-            var curse = getCursByCodeAndDateInner(code, calendar, key);
-            if (curse == null) return null;
-            return cursMapper.toCursOnDate(curse, calendar);
-        } catch (NullPointerException e) {
-            throw new NotFoundException(String.format("Curs by %s code not found", code));
-        }
-    }
-
-    @Cacheable(value = "curs-cache", key = "#key")
-    public ValuteData.ValuteCursOnDate getCursByCodeAndDateInner(String code, GregorianCalendar calendar, String key) {
-        return client.getValuteCursOnDate(calendar)
-                .stream()
-                .filter(c -> c.getVchCode().equalsIgnoreCase(code))
-                .findAny().orElse(null);
-    }
-
-
-    public List<CursOnDate> getCursByDates(CodeWithDates codeWithDates) {
-        return codeWithDates.getDates().stream()
-                .map(date -> getCursByCodeAndDate(codeWithDates.getCode(), date))
-                .collect(Collectors.toList());
+        return valuteService.getCursByCodeAndDate(code, calendar, genKey(code, calendar));
     }
 
     private String genKey(String code, GregorianCalendar calendar) {
-        return code.toUpperCase() + calendar.toZonedDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        return code.toUpperCase() + calendar.toZonedDateTime().format(DateTimeFormatter.ISO_LOCAL_DATE);
     }
+
 }
