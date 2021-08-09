@@ -1,0 +1,8 @@
+redis:
+    env_file: 
+        - property.env
+    image: redis
+    command: redis-server --requirepass "${REDIS_PASSWORD}"
+    restart: always
+    ports:
+        - 6379:6379
