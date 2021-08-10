@@ -1,9 +1,7 @@
 package ru.proskyryakov.cbrcursondateadapter.adapter.api;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.proskyryakov.cbrcursondateadapter.adapter.models.ValuteModel;
 import ru.proskyryakov.cbrcursondateadapter.adapter.services.CursHistoryService;
 
@@ -19,6 +17,26 @@ public class CursHistoryController {
     @GetMapping("/valutes")
     public List<ValuteModel> getAllValute() {
         return cursHistoryService.getAllValutes();
+    }
+
+    @GetMapping("/valute/{code}")
+    public ValuteModel getValuteByCode(@PathVariable("code") String code) {
+        return cursHistoryService.getValuteByCode(code);
+    }
+
+    @DeleteMapping("/valute/{code}")
+    public void deleteValuteByCode(@PathVariable("code") String code) {
+        cursHistoryService.deleteValuteByCode(code);
+    }
+
+    @PutMapping("/valute")
+    public void updateValuteInterval(@RequestBody ValuteModel valuteModel) {
+        cursHistoryService.updateValuteInterval(valuteModel);
+    }
+
+    @PostMapping("/valute")
+    public void addValute(@RequestBody ValuteModel valuteModel) {
+        cursHistoryService.addValute(valuteModel);
     }
 
 }

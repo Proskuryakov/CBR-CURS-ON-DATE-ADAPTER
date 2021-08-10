@@ -6,4 +6,10 @@ import ru.proskyryakov.cbrcursondateadapter.db.entities.Valute;
 
 @Repository
 public interface ValuteRepository extends JpaRepository<Valute, Long> {
+
+    Valute getValuteByCode(String code);
+
+    void deleteByCode(String code);
+
+
 }

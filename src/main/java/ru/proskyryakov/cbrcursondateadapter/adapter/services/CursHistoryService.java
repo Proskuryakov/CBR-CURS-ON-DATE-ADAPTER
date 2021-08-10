@@ -20,4 +20,24 @@ public class CursHistoryService {
         return valuteMapper.toValuteModels(valutes);
     }
 
+    public ValuteModel getValuteByCode(String code) {
+        var valute = valuteRepository.getValuteByCode(code.toUpperCase());
+        if (valute == null) return null;
+        return valuteMapper.toValuteModel(valute);
+    }
+
+    public void deleteValuteByCode(String code) {
+        valuteRepository.deleteByCode(code.toUpperCase());
+    }
+
+    public void updateValuteInterval(ValuteModel valuteModel) {
+        var updatedValute =  valuteRepository.getValuteByCode(valuteModel.getCode());
+        updatedValute.setInterval(valuteModel.getInterval());
+        valuteRepository.save(updatedValute);
+    }
+
+    public void addValute(ValuteModel valuteModel) {
+        var newValute = valuteMapper.fromValuteModel(valuteModel);
+        valuteRepository.save(newValute);
+    }
 }
