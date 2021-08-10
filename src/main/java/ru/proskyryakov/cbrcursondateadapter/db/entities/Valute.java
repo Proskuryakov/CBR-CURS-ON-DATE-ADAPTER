@@ -10,8 +10,8 @@ import javax.persistence.Id;
 public class Valute {
 
     @Id
-    public Long id;
-    public String code;
-    public Integer interval;
+    private Long id;
+    private String code;
+    private Integer interval;
 
 }
