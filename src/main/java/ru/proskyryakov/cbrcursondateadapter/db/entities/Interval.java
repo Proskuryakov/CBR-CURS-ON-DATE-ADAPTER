@@ -12,6 +12,8 @@ public class Interval {
     @GeneratedValue(generator = "intervals_id_seq")
     private Long id;
     private Integer interval;
+    @Column(name = "is_actual")
+    private Boolean isActual;
 
     @OneToOne
     @JoinColumn(name = "valute_id", referencedColumnName = "id")
