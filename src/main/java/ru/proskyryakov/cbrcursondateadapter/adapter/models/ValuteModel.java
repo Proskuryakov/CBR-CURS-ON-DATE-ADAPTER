@@ -5,7 +5,8 @@ import lombok.Data;
 @Data
 public class ValuteModel {
 
+    private Long id;
     private String code;
-    private Integer interval;
+    private String name;
 
 }
