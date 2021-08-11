@@ -20,4 +20,10 @@ public class CursControllerAdvice {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(AlreadyExistsException.class)
+    public ResponseEntity<ExceptionResponse> handleAlreadyExistsException(AlreadyExistsException e) {
+        ExceptionResponse response = new ExceptionResponse(e.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
 }
