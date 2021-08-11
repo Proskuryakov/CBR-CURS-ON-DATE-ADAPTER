@@ -25,6 +25,9 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     show-sql: true
 
+scheduler:
+  fixedDelay: 60000 #seconds
+  initialDelay: 1000 #seconds
 
 #logging:
 #  level:
