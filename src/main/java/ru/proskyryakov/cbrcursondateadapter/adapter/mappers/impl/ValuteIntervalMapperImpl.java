@@ -32,7 +32,8 @@ public class ValuteIntervalMapperImpl implements ValuteIntervalMapper {
                 interval.getId(),
                 interval.getValute().getId(),
                 interval.getValute().getCode(),
-                interval.getInterval()
+                interval.getInterval(),
+                interval.getIsActual()
         );
     }
 
@@ -47,6 +48,7 @@ public class ValuteIntervalMapperImpl implements ValuteIntervalMapper {
         interval.setInterval(intervalModel.getInterval());
         interval.setValute(valute);
         interval.setId(null);
+        interval.setIsActual(true);
         return interval;
     }
 }

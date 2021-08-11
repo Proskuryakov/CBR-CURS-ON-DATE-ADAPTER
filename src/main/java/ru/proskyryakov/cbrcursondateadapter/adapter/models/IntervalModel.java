@@ -15,5 +15,6 @@ public class IntervalModel {
     @NonNull
     private String code;
     private Integer interval;
+    private Boolean isActual;
 
 }

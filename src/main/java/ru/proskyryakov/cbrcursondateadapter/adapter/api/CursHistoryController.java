@@ -20,9 +20,14 @@ public class CursHistoryController {
         return cursHistoryService.getAllValute();
     }
 
-    @GetMapping("/intervals")
+    @GetMapping("/intervals/all")
     public List<IntervalModel> getAllInterval() {
         return cursHistoryService.getAllInterval();
+    }
+
+    @GetMapping("/intervals")
+    public List<IntervalModel> getActualInterval() {
+        return cursHistoryService.getActualInterval();
     }
 
     @GetMapping("/interval/{code}")
