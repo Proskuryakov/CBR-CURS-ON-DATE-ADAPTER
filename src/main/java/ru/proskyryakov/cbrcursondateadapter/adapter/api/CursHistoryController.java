@@ -2,6 +2,7 @@ package ru.proskyryakov.cbrcursondateadapter.adapter.api;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import ru.proskyryakov.cbrcursondateadapter.adapter.models.IntervalModel;
 import ru.proskyryakov.cbrcursondateadapter.adapter.models.ValuteModel;
 import ru.proskyryakov.cbrcursondateadapter.adapter.services.CursHistoryService;
 
@@ -16,27 +17,32 @@ public class CursHistoryController {
 
     @GetMapping("/valutes")
     public List<ValuteModel> getAllValute() {
-        return cursHistoryService.getAllValutes();
+        return cursHistoryService.getAllValute();
     }
 
-    @GetMapping("/valute/{code}")
-    public ValuteModel getValuteByCode(@PathVariable("code") String code) {
-        return cursHistoryService.getValuteByCode(code);
+    @GetMapping("/intervals")
+    public List<IntervalModel> getAllInterval() {
+        return cursHistoryService.getAllInterval();
     }
 
-    @DeleteMapping("/valute/{code}")
-    public void deleteValuteByCode(@PathVariable("code") String code) {
-        cursHistoryService.deleteValuteByCode(code);
+    @GetMapping("/interval/{code}")
+    public IntervalModel getIntervalByCode(@PathVariable("code") String code) {
+        return cursHistoryService.getIntervalByCode(code);
     }
 
-    @PutMapping("/valute")
-    public void updateValuteInterval(@RequestBody ValuteModel valuteModel) {
-        cursHistoryService.updateValuteInterval(valuteModel);
+    @DeleteMapping("/interval/{code}")
+    public void deleteIntervalByCode(@PathVariable("code") String code) {
+        cursHistoryService.deleteIntervalByCode(code);
     }
 
-    @PostMapping("/valute")
-    public void addValute(@RequestBody ValuteModel valuteModel) {
-        cursHistoryService.addValute(valuteModel);
+    @PutMapping("/interval")
+    public IntervalModel updateInterval(@RequestBody IntervalModel intervalModel) {
+        return cursHistoryService.updateInterval(intervalModel);
+    }
+
+    @PostMapping("/interval")
+    public IntervalModel addInterval(@RequestBody IntervalModel intervalModel) {
+        return cursHistoryService.addInterval(intervalModel);
     }
 
 }

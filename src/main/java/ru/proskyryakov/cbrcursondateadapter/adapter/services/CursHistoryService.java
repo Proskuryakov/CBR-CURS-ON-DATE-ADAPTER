@@ -1,9 +1,17 @@
 package ru.proskyryakov.cbrcursondateadapter.adapter.services;
 
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
-import ru.proskyryakov.cbrcursondateadapter.adapter.mappers.ValuteMapper;
+import ru.proskyryakov.cbrcursondateadapter.adapter.exceptions.AlreadyExistsException;
+import ru.proskyryakov.cbrcursondateadapter.adapter.exceptions.NotFoundException;
+import ru.proskyryakov.cbrcursondateadapter.adapter.mappers.ValuteIntervalMapper;
+import ru.proskyryakov.cbrcursondateadapter.adapter.models.IntervalModel;
 import ru.proskyryakov.cbrcursondateadapter.adapter.models.ValuteModel;
+import ru.proskyryakov.cbrcursondateadapter.db.entities.Interval;
+import ru.proskyryakov.cbrcursondateadapter.db.entities.Valute;
+import ru.proskyryakov.cbrcursondateadapter.db.repositories.IntervalRepository;
 import ru.proskyryakov.cbrcursondateadapter.db.repositories.ValuteRepository;
 
 import java.util.List;
@@ -13,31 +21,63 @@ import java.util.List;
 public class CursHistoryService {
 
     private final ValuteRepository valuteRepository;
-    private final ValuteMapper valuteMapper;
+    private final IntervalRepository intervalRepository;
+    private final ValuteIntervalMapper valuteIntervalMapper;
 
-    public List<ValuteModel> getAllValutes() {
+    public List<ValuteModel> getAllValute() {
         var valutes = valuteRepository.findAll();
-        return valuteMapper.toValuteModels(valutes);
+        return valuteIntervalMapper.toValuteModels(valutes);
     }
 
-    public ValuteModel getValuteByCode(String code) {
-        var valute = valuteRepository.getValuteByCode(code.toUpperCase());
-        if (valute == null) return null;
-        return valuteMapper.toValuteModel(valute);
+    public List<IntervalModel> getAllInterval() {
+        var intervals = intervalRepository.findAll();
+        return valuteIntervalMapper.toIntervalModels(intervals);
     }
 
-    public void deleteValuteByCode(String code) {
-        valuteRepository.deleteByCode(code.toUpperCase());
+    @SneakyThrows
+    public IntervalModel getIntervalByCode(@NonNull String code) {
+        Interval interval = intervalRepository.findIntervalByValute_Code(code.toUpperCase());
+        if(interval == null) throw new NotFoundException(String.format("Interval with code %s not found", code));
+        return valuteIntervalMapper.toIntervalModel(interval);
     }
 
-    public void updateValuteInterval(ValuteModel valuteModel) {
-        var updatedValute =  valuteRepository.getValuteByCode(valuteModel.getCode());
-        updatedValute.setInterval(valuteModel.getInterval());
-        valuteRepository.save(updatedValute);
+    @SneakyThrows
+    public void deleteIntervalByCode(String code) {
+        try {
+            var interval = intervalRepository.findIntervalByValute_Code(code.toUpperCase());
+            intervalRepository.delete(interval);
+        } catch (Exception e) {
+            throw new NotFoundException("Nothing found by code " + code);
+        }
+
     }
 
-    public void addValute(ValuteModel valuteModel) {
-        var newValute = valuteMapper.fromValuteModel(valuteModel);
-        valuteRepository.save(newValute);
+    @SneakyThrows
+    public IntervalModel updateInterval(IntervalModel intervalModel) {
+        Interval interval = intervalRepository.findIntervalByValute_Code(intervalModel.getCode());
+        if(interval == null) throw new NotFoundException(
+                String.format("Interval with code %s not found", intervalModel.getCode())
+        );
+        interval.setInterval(intervalModel.getInterval());
+        Interval updatedInterval = intervalRepository.save(interval);
+        return valuteIntervalMapper.toIntervalModel(updatedInterval);
     }
+
+    @SneakyThrows
+    public IntervalModel addInterval(IntervalModel intervalModel) {
+        Valute valute = valuteRepository.findValuteByCode(intervalModel.getCode());
+        if(valute == null) throw new NotFoundException(
+                String.format("Valute with code %s does not exist", intervalModel.getCode())
+        );
+        Interval interval = valuteIntervalMapper.fromIntervalModel(intervalModel, valute);
+        try {
+            var createdInterval = intervalRepository.save(interval);
+            return valuteIntervalMapper.toIntervalModel(createdInterval);
+        } catch (Exception e) {
+            throw new AlreadyExistsException(
+                    String.format("Interval with code %s already exists", intervalModel.getCode())
+            );
+        }
+    }
+
 }
