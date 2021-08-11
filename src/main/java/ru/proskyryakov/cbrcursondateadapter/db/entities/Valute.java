@@ -4,15 +4,14 @@ import lombok.Data;
 
 import javax.persistence.*;
 
-@Entity
+@Entity(name = "valutes")
 @Data
 public class Valute {
 
     @Id
-    @GeneratedValue(generator = "valute_id_seq")
+    @GeneratedValue(generator = "valutes_id_seq")
     private Long id;
-    @Column(unique = true)
     private String code;
-    private Integer interval;
+    private String name;
 
 }
