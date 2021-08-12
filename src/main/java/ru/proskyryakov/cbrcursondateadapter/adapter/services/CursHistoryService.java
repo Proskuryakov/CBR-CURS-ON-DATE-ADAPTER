@@ -41,7 +41,7 @@ public class CursHistoryService {
 
     @SneakyThrows
     public IntervalModel getIntervalByCode(@NonNull String code) {
-        Interval interval = intervalRepository.findIntervalByValute_Code(code.toUpperCase());
+        Interval interval = intervalRepository.findIntervalByIsActualTrueAndValute_Code(code.toUpperCase());
         if(interval == null) throw new NotFoundException(String.format("Interval with code %s not found", code));
         return valuteIntervalMapper.toIntervalModel(interval);
     }
@@ -49,7 +49,7 @@ public class CursHistoryService {
     @SneakyThrows
     public void deleteIntervalByCode(String code) {
         try {
-            var interval = intervalRepository.findIntervalByValute_Code(code.toUpperCase());
+            var interval = intervalRepository.findIntervalByIsActualTrueAndValute_Code(code.toUpperCase());
             interval.setIsActual(false);
             intervalRepository.save(interval);
         } catch (Exception e) {
@@ -60,7 +60,7 @@ public class CursHistoryService {
 
     @SneakyThrows
     public IntervalModel updateInterval(IntervalModel intervalModel) {
-        Interval interval = intervalRepository.findIntervalByValute_Code(intervalModel.getCode());
+        Interval interval = intervalRepository.findIntervalByIsActualTrueAndValute_Code(intervalModel.getCode());
         if(interval == null) throw new NotFoundException(
                 String.format("Interval with code %s not found", intervalModel.getCode())
         );

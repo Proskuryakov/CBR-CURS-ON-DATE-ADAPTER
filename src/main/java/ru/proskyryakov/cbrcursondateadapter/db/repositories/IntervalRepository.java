@@ -9,5 +9,7 @@ public interface IntervalRepository extends JpaRepository<Interval, Long> {
 
     Interval findIntervalByValute_Code(String code);
 
+    Interval findIntervalByIsActualTrueAndValute_Code(String code);
+
     List<Interval> findAllByIsActualTrue();
 }
