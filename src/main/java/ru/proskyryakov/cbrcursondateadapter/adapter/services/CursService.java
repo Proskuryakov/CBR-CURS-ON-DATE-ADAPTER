@@ -20,6 +20,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -59,4 +60,8 @@ public class CursService {
         return code.toUpperCase() + calendar.toZonedDateTime().format(DateTimeFormatter.ISO_LOCAL_DATE);
     }
 
+    public List<CursOnDate> getCursByCodesAndDate(List<String> codes, Date date) {
+        String strDate = new SimpleDateFormat("yyyy-MM-dd").format(date);
+        return codes.stream().map(code -> getCursByCodeAndDate(code, strDate)).collect(Collectors.toList());
+    }
 }
