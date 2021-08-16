@@ -1,123 +1,160 @@
 package ru.proskyryakov.cbrcursondateadapter.adapter.api;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import io.restassured.builder.ResponseSpecBuilder;
+import io.restassured.config.DecoderConfig;
+import io.restassured.config.EncoderConfig;
+import io.restassured.http.ContentType;
+import io.restassured.module.mockmvc.RestAssuredMockMvc;
+import io.restassured.module.mockmvc.config.RestAssuredMockMvcConfig;
+import io.restassured.specification.ResponseSpecification;
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import ru.proskyryakov.cbrcursondateadapter.adapter.models.CodeWithDates;
 import ru.proskyryakov.cbrcursondateadapter.adapter.models.CursOnDate;
-
+import ru.proskyryakov.cbrcursondateadapter.adapter.services.CursService;
 
 import java.math.BigDecimal;
+import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
 
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+
+@ExtendWith({MockitoExtension.class})
 class CursControllerTest {
 
-    @Autowired
-    private TestRestTemplate restTemplate;
+    @Mock
+    private CursService cursService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @InjectMocks
+    private CursController cursController;
 
-    @Test
-    void getCursByCodeUsd(){
-        ResponseEntity<CursOnDate> response = restTemplate.getForEntity("/curs/usd", CursOnDate.class);
-
-        assertThat(response.getStatusCode(), is(HttpStatus.OK));
-        assertThat(response.getBody(), notNullValue());
-
-        String responseDate = new SimpleDateFormat("yyyy-MM-dd").format(response.getBody().getDate());
-        String nowDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-
-        assertThat(responseDate, is(nowDate));
-        assertThat(response.getBody().getCode(), is("USD"));
+    @BeforeEach
+    void setUp() {
+        cursController = new CursController(cursService);
+        RestAssuredMockMvc.standaloneSetup(cursController);
     }
 
     @Test
-    void getCursByUncorrectCode(){
-        ResponseEntity<CursOnDate> response = restTemplate.getForEntity("/curs/DOLLAR", CursOnDate.class);
-        assertThat(response.getStatusCode(), is(HttpStatus.BAD_REQUEST));
+    void getCursByCodeAndDate() throws Exception {
+
+        String code = "USD";
+        String strDate = "2000-01-17";
+
+        var date = parseDate(strDate);
+
+        CursOnDate result = new CursOnDate();
+        result.setCode(code);
+        result.setCurs(new BigDecimal("28.5700"));
+        result.setDate(date);
+
+        when(cursService.getCursByCodeAndDate(code, strDate)).thenReturn(result);
+
+        ResponseSpecification checkStatusCodeAndContentType =
+                new ResponseSpecBuilder()
+                        .expectStatusCode(200)
+                        .expectContentType(ContentType.JSON)
+                        .build();
+
+        CursOnDate cursOnDate = RestAssuredMockMvc
+                .given().log().body().contentType("application/json")
+                .when()
+                    .get("/curs/" + code + "/date/" + strDate)
+                .then()
+                    .log()
+                    .body()
+                    .assertThat()
+                    .spec(checkStatusCodeAndContentType)
+                    .assertThat()
+                    .body("code", Matchers.equalTo("USD"))
+                    .body("date", Matchers.equalTo("2000-01-17"))
+                    .extract()
+                    .as(CursOnDate.class);
+
+        assertThat(cursOnDate.getCurs(), Matchers.equalTo(new BigDecimal("28.5700")));
+
     }
 
     @Test
-    void getCursByCodeUsdAndDate2000_01_17() {
-        ResponseEntity<CursOnDate> response = restTemplate.getForEntity("/curs/usd/date/2000-01-17", CursOnDate.class);
-        assertThat(response.getStatusCode(), is(HttpStatus.OK));
-        assertThat(response.getBody(), notNullValue());
+    void getCursByDates() throws Exception {
 
-        assertThat(response.getBody().getCode(), is("USD"));
-        assertThat(response.getBody().getCurs(), is(new BigDecimal("28.5700")));
+        String requestBody = "{\n" +
+                "    \"code\": \"usd\",\n" +
+                "    \"dates\": [\n" +
+                "        \"1997-08-02\",\n" +
+                "        \"1998-08-02\"\n" +
+                "    ]\n" +
+                "}";
 
-        String responseDate = new SimpleDateFormat("yyyy-MM-dd").format(response.getBody().getDate());
-        assertThat(responseDate, is("2000-01-17"));
-    }
-
-    @Test
-    void getCursByCodeUsdAndUncorrectDate() {
-        ResponseEntity<CursOnDate> response = restTemplate.getForEntity("/curs/usd/date/2000-01", CursOnDate.class);
-        assertThat(response.getStatusCode(), is(HttpStatus.BAD_REQUEST));
-    }
-
-    @Test
-    void getCursByDates() throws JsonProcessingException {
-        HttpEntity<CodeWithDates> codeWithDatesHttpEntity = getRequest();
-        ResponseEntity<List<CursOnDate>> response = restTemplate.exchange(
-                "/curs",
-                HttpMethod.POST,
-                codeWithDatesHttpEntity,
-                new ParameterizedTypeReference<List<CursOnDate>>() {}
-        );
-
-        assertThat(response.getStatusCode(), is(HttpStatus.OK));
-        assertThat(response.getBody(), notNullValue());
-
-        List<CursOnDate> curses = response.getBody();
-        assertThat(curses, hasSize(2));
-        assertEquals(curses, getCorrectResponse());
-    }
-
-    private HttpEntity<CodeWithDates> getRequest(){
         CodeWithDates codeWithDates = new CodeWithDates();
-        codeWithDates.setCode("USD");
-        codeWithDates.setDates(
-                Stream.of("1997-08-02", "1998-08-02").collect(Collectors.toList())
-        );
+        codeWithDates.setCode("usd");
+        codeWithDates.setDates(Stream.of("1997-08-02", "1998-08-02").collect(Collectors.toList()));
 
-        return new HttpEntity<>(codeWithDates);
+        List<CursOnDate> result = getResult();
+        when(cursService.getCursByDates(codeWithDates)).thenReturn(result);
+
+        var curses = RestAssuredMockMvc
+                .given()
+                .contentType(ContentType.JSON)
+                .config(RestAssuredMockMvcConfig.config()
+                        .decoderConfig(DecoderConfig.decoderConfig().defaultContentCharset("UTF-8"))
+                        .encoderConfig(EncoderConfig.encoderConfig().defaultContentCharset("UTF-8")))
+                .body(requestBody)
+                .when()
+                .post("/curs")
+                .then()
+                .log()
+                .body()
+                .assertThat()
+                .statusCode(200)
+                .body("", Matchers.hasSize(2))
+                .body("[0].code", Matchers.equalTo("USD"))
+                .body("[1].code", Matchers.equalTo("USD"))
+                .body("[0].date", Matchers.equalTo("1997-08-02"))
+                .body("[1].date", Matchers.equalTo("1998-08-02"))
+                .extract()
+                .as(CursOnDate[].class);
+
+        assertThat(curses[0].getCurs(), Matchers.equalTo(new BigDecimal("5801.0000")));
+        assertThat(curses[1].getCurs(), Matchers.equalTo(new BigDecimal("6.2410")));
     }
 
-    private List<CursOnDate> getCorrectResponse() throws JsonProcessingException {
-        List<CursOnDate> correctResponse = objectMapper.readValue(
-                "[{\n" +
-                        "   \"code\": \"USD\",\n" +
-                        "   \"curs\": 5801.0000,\n" +
-                        "   \"date\": \"1997-08-02\"\n" +
-                        "},\n" +
-                        "{\n" +
-                        "   \"code\": \"USD\",\n" +
-                        "   \"curs\": 6.2410,\n" +
-                        "   \"date\": \"1998-08-02\"\n" +
-                        "}]",  new TypeReference<List<CursOnDate>>(){}
-        );
+    private List<CursOnDate> getResult() throws ParseException {
+        CursOnDate cursOnDate1 = new CursOnDate();
+        cursOnDate1.setCode("USD");
+        cursOnDate1.setCurs(new BigDecimal("5801.0000"));
+        cursOnDate1.setDate(parseDate("1997-08-02"));
 
-        return correctResponse;
+        CursOnDate cursOnDate2 = new CursOnDate();
+        cursOnDate2.setCode("USD");
+        cursOnDate2.setCurs(new BigDecimal("6.2410"));
+        cursOnDate2.setDate(parseDate("1998-08-02"));
+
+        List<CursOnDate> list = new LinkedList<>();
+        list.add(cursOnDate1);
+        list.add(cursOnDate2);
+
+        return list;
     }
+
+    private Date parseDate(String strDate) throws ParseException {
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+
+        var date = new GregorianCalendar();
+        date.setTime(df.parse(strDate));
+        date.add(Calendar.DATE, 1);
+
+        return date.getTime();
+    }
+
 }
