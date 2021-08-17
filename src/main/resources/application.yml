@@ -24,11 +24,25 @@ spring:
         ddl-auto: validate
         dialect: org.hibernate.dialect.PostgreSQLDialect
 #    show-sql: true
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+  main:
+    allow-bean-definition-overriding: true
 
 scheduler:
   fixedDelay: 60000 #seconds
   initialDelay: 1000 #seconds
   interval-coefficient: 1000
+
+rabbitmq:
+  exchange: change-history-exchange
+  routingkey: change-history-routingkey
+  queue: change-history-queue
+
+
 
 #logging:
 #  level:
