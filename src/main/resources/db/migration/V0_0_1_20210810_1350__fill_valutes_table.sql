@@ -37,6 +37,7 @@ values ('AUD', 'Австралийский доллар'),
 
 
 insert into intervals (valute_id, interval)
-values ((select id from valutes where code = 'USD'), 60);
+values ((select id from valutes where code = 'USD'), 60),
+       ((select id from valutes where code = 'BYN'), 180);
 
 
