@@ -16,6 +16,7 @@ import ru.proskyryakov.cbrcursondateadapter.db.repositories.HistoryRepository;
 import ru.proskyryakov.cbrcursondateadapter.db.repositories.IntervalRepository;
 
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -39,8 +40,9 @@ public class SchedulerService {
         log.info("Scheduled work");
         List<History> histories = historyRepository.findAllLastEntry();
 
-        Date date = new Date();
-        List<Valute> tracedValutes = getTrackedValute(histories, date);
+//        Date date = new Date();
+        var calendar = new GregorianCalendar();
+        List<Valute> tracedValutes = getTrackedValute(histories, calendar.getTime());
 
         tracedValutes.addAll(
                 intervalRepository.findNewIntervals().stream()
@@ -49,7 +51,7 @@ public class SchedulerService {
         );
 
         if (!tracedValutes.isEmpty()) {
-           addToHistory(tracedValutes, date);
+           addToHistory(tracedValutes, calendar);
         }
     }
 
@@ -60,7 +62,7 @@ public class SchedulerService {
                 .collect(Collectors.toList());
     }
 
-    private void addToHistory(List<Valute> tracedValutes, Date currentDate) {
+    private void addToHistory(List<Valute> tracedValutes, GregorianCalendar currentDate) {
         List<CursOnDate> cursOnDateList = cursService.getCursByCodesAndDate(
                 tracedValutes.stream().map(Valute::getCode).collect(Collectors.toList()),
                 currentDate
@@ -72,7 +74,7 @@ public class SchedulerService {
         for(CursOnDate curs: cursOnDateList) {
             History h = new History();
             h.setCurse(curs.getCurs());
-            h.setDatetime(currentDate);
+            h.setDatetime(currentDate.getTime());
             h.setInterval(intervals.get(curs.getCode()));
             historyRepository.save(h);
         }
