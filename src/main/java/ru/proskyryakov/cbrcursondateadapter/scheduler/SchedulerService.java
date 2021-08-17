@@ -7,14 +7,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import ru.proskyryakov.cbrcursondateadapter.adapter.models.CursOnDate;
-import ru.proskyryakov.cbrcursondateadapter.adapter.services.CursHistoryService;
 import ru.proskyryakov.cbrcursondateadapter.adapter.services.CursService;
 import ru.proskyryakov.cbrcursondateadapter.db.entities.History;
 import ru.proskyryakov.cbrcursondateadapter.db.entities.Interval;
 import ru.proskyryakov.cbrcursondateadapter.db.entities.Valute;
 import ru.proskyryakov.cbrcursondateadapter.db.repositories.HistoryRepository;
 import ru.proskyryakov.cbrcursondateadapter.db.repositories.IntervalRepository;
+import ru.proskyryakov.cbrcursondateadapter.rabbit.ChangeCursModel;
+import ru.proskyryakov.cbrcursondateadapter.rabbit.ChangeDirection;
+import ru.proskyryakov.cbrcursondateadapter.rabbit.RabbitService;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
@@ -27,7 +30,7 @@ public class SchedulerService {
 
     private static final Logger log = LoggerFactory.getLogger(SchedulerService.class);
 
-    private final CursHistoryService cursHistoryService;
+    private final RabbitService rabbitService;
     private final CursService cursService;
     private final IntervalRepository intervalRepository;
     private final HistoryRepository historyRepository;
@@ -40,7 +43,6 @@ public class SchedulerService {
         log.info("Scheduled work");
         List<History> histories = historyRepository.findAllLastEntry();
 
-//        Date date = new Date();
         var calendar = new GregorianCalendar();
         List<Valute> tracedValutes = getTrackedValute(histories, calendar.getTime());
 
@@ -51,7 +53,9 @@ public class SchedulerService {
         );
 
         if (!tracedValutes.isEmpty()) {
-           addToHistory(tracedValutes, calendar);
+            List<CursOnDate> cursOnDateList = getNewCurses(tracedValutes, calendar);
+            addToHistory(cursOnDateList, calendar);
+            addToQueue(histories, cursOnDateList, calendar);
         }
     }
 
@@ -62,16 +66,18 @@ public class SchedulerService {
                 .collect(Collectors.toList());
     }
 
-    private void addToHistory(List<Valute> tracedValutes, GregorianCalendar currentDate) {
-        List<CursOnDate> cursOnDateList = cursService.getCursByCodesAndDate(
+    private List<CursOnDate> getNewCurses(List<Valute> tracedValutes, GregorianCalendar currentDate) {
+        return cursService.getCursByCodesAndDate(
                 tracedValutes.stream().map(Valute::getCode).collect(Collectors.toList()),
                 currentDate
         );
+    }
 
+    private void addToHistory(List<CursOnDate> cursOnDateList, GregorianCalendar currentDate) {
         Map<String, Interval> intervals = intervalRepository.findAllByIsActualTrue().stream()
                 .collect(Collectors.toMap(i -> i.getValute().getCode(), i -> i));
 
-        for(CursOnDate curs: cursOnDateList) {
+        for (CursOnDate curs : cursOnDateList) {
             History h = new History();
             h.setCurse(curs.getCurs());
             h.setDatetime(currentDate.getTime());
@@ -79,6 +85,26 @@ public class SchedulerService {
             historyRepository.save(h);
         }
 
+    }
+
+    private void addToQueue(List<History> histories, List<CursOnDate> cursOnDateList, GregorianCalendar currentDate) {
+        Map<String, BigDecimal> code2curs = histories.stream()
+                .collect(Collectors.toMap(h -> h.getInterval().getValute().getCode(), History::getCurse));
+
+        for (CursOnDate curs : cursOnDateList) {
+            int compare = curs.getCurs().compareTo(code2curs.get(curs.getCode()));
+            if (compare != 0) {
+                BigDecimal diff = curs.getCurs().subtract(code2curs.get(curs.getCode())).abs();
+
+                ChangeCursModel changeCursModel = new ChangeCursModel();
+
+                changeCursModel.setDifference(diff);
+                changeCursModel.setDirection(compare > 0 ? ChangeDirection.INC : ChangeDirection.DEC);
+                changeCursModel.setDatetime(currentDate.getTime());
+
+                rabbitService.send(changeCursModel);
+            }
+        }
     }
 
 }
