@@ -1,9 +1,10 @@
 package ru.proskyryakov.cbrcursondateadapter.adapter.api;
 
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.web.bind.annotation.*;
-import ru.proskyryakov.cbrcursondateadapter.adapter.models.IntervalModel;
-import ru.proskyryakov.cbrcursondateadapter.adapter.models.ValuteModel;
+import ru.proskyryakov.cbrcursondateadapter.adapter.exceptions.NotFoundException;
+import ru.proskyryakov.cbrcursondateadapter.adapter.models.*;
 import ru.proskyryakov.cbrcursondateadapter.adapter.services.CursHistoryService;
 
 import java.util.List;
@@ -49,5 +50,24 @@ public class CursHistoryController {
     public IntervalModel addInterval(@RequestBody IntervalModel intervalModel) {
         return cursHistoryService.addInterval(intervalModel);
     }
+
+    @SneakyThrows
+    @PostMapping("/{code}")
+    public CodeHistoryModel getHistoryByCodeAndDates(
+            @PathVariable("code") String code,
+            @RequestBody HistoryDateRequest historyDateRequest
+    ) {
+        var codeHistoryModel = cursHistoryService.getHistoryByCodeAndDates(code, historyDateRequest);
+        if (codeHistoryModel.getHistory().isEmpty()) {
+            throw new NotFoundException("History not found");
+        }
+        return codeHistoryModel;
+    }
+
+    @PostMapping
+    public List<CodeHistoryModel> getHistoryByCodesAndDates(@RequestBody CodesDatesHistoryRequest request) {
+        return cursHistoryService.getHistoryByCodesAndDates(request);
+    }
+
 
 }

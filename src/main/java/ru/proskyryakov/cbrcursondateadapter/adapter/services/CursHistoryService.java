@@ -7,14 +7,17 @@ import org.springframework.stereotype.Service;
 import ru.proskyryakov.cbrcursondateadapter.adapter.exceptions.AlreadyExistsException;
 import ru.proskyryakov.cbrcursondateadapter.adapter.exceptions.NotFoundException;
 import ru.proskyryakov.cbrcursondateadapter.adapter.mappers.ValuteIntervalMapper;
-import ru.proskyryakov.cbrcursondateadapter.adapter.models.IntervalModel;
-import ru.proskyryakov.cbrcursondateadapter.adapter.models.ValuteModel;
+import ru.proskyryakov.cbrcursondateadapter.adapter.models.*;
 import ru.proskyryakov.cbrcursondateadapter.db.entities.Interval;
 import ru.proskyryakov.cbrcursondateadapter.db.entities.Valute;
+import ru.proskyryakov.cbrcursondateadapter.db.repositories.HistoryRepository;
 import ru.proskyryakov.cbrcursondateadapter.db.repositories.IntervalRepository;
 import ru.proskyryakov.cbrcursondateadapter.db.repositories.ValuteRepository;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +25,7 @@ public class CursHistoryService {
 
     private final ValuteRepository valuteRepository;
     private final IntervalRepository intervalRepository;
+    private final HistoryRepository historyRepository;
     private final ValuteIntervalMapper valuteIntervalMapper;
 
     public List<ValuteModel> getAllValute() {
@@ -86,4 +90,46 @@ public class CursHistoryService {
         }
     }
 
+    public CodeHistoryModel getHistoryByCodeAndDates(String code, HistoryDateRequest historyDateRequest) {
+        checkDates(historyDateRequest);
+
+        var history = historyRepository.findAllByInterval_Valute_CodeAndAndDatetimeBetweenOrderByDatetime(
+                code.toUpperCase(),
+                historyDateRequest.getFrom(),
+                addDay(historyDateRequest.getTo())
+        );
+
+        CodeHistoryModel codeHistoryModel = new CodeHistoryModel();
+        codeHistoryModel.setCode(code.toUpperCase());
+        codeHistoryModel.setHistory(
+                history.stream()
+                        .map(h -> new HistoryModel(h.getCurse(), h.getDatetime()))
+                        .collect(Collectors.toList())
+        );
+
+        return codeHistoryModel;
+    }
+
+    public List<CodeHistoryModel> getHistoryByCodesAndDates(CodesDatesHistoryRequest request) {
+        return request.getCodes().stream()
+                .map(code -> getHistoryByCodeAndDates(code, request.getDates()))
+                .collect(Collectors.toList());
+    }
+
+    private Date addDay(Date date){
+        Calendar instance = Calendar.getInstance();
+        instance.setTime(date);
+        instance.add(Calendar.DATE, 1);
+        return instance.getTime();
+    }
+
+    private void checkDates(HistoryDateRequest request) {
+        if (request.getFrom() == null) {
+            request.setFrom(new Date(0));
+        }
+
+        if (request.getTo() == null) {
+            request.setTo(new Date());
+        }
+    }
 }
