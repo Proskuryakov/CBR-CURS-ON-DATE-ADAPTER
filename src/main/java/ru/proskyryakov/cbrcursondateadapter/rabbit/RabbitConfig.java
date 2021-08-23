@@ -5,6 +5,7 @@ import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,27 +13,27 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitConfig {
 
-    @Value("${rabbitmq.queue}")
+    @Value("${rabbitmq.queue.history}")
     private String queueName;
 
-    @Value("${rabbitmq.exchange}")
+    @Value("${rabbitmq.exchange.history}")
     private String exchange;
 
-    @Value("${rabbitmq.routingkey}")
+    @Value("${rabbitmq.routingkey.history}")
     private String routingkey;
 
     @Bean
-    Queue queue() {
+    Queue historyQueue() {
         return new Queue(queueName, false);
     }
 
     @Bean
-    DirectExchange exchange() {
+    DirectExchange historyExchange() {
         return new DirectExchange(exchange);
     }
 
     @Bean
-    Binding binding(Queue queue, DirectExchange exchange) {
+    Binding historyBinding(@Qualifier("historyQueue") Queue queue, @Qualifier("historyExchange") DirectExchange exchange) {
         return BindingBuilder.bind(queue).to(exchange).with(routingkey);
     }
 
