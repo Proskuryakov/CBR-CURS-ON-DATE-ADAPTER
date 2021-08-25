@@ -19,9 +19,7 @@ import ru.proskyryakov.cbrcursondateadapter.adapter.models.CursOnDate;
 import ru.proskyryakov.cbrcursondateadapter.adapter.services.CursService;
 
 import java.math.BigDecimal;
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -46,17 +44,15 @@ class CursControllerTest {
     }
 
     @Test
-    void getCursByCodeAndDate() throws Exception {
+    void getCursByCodeAndDate() {
 
         String code = "USD";
         String strDate = "2000-01-17";
 
-        var date = parseDate(strDate);
-
         CursOnDate result = new CursOnDate();
         result.setCode(code);
         result.setCurs(new BigDecimal("28.5700"));
-        result.setDate(date);
+        result.setDate(strDate);
 
         when(cursService.getCursByCodeAndDate(code, strDate)).thenReturn(result);
 
@@ -86,7 +82,7 @@ class CursControllerTest {
     }
 
     @Test
-    void getCursByDates() throws Exception {
+    void getCursByDates() {
 
         String requestBody = "{\n" +
                 "    \"code\": \"usd\",\n" +
@@ -129,32 +125,22 @@ class CursControllerTest {
         assertThat(curses[1].getCurs(), Matchers.equalTo(new BigDecimal("6.2410")));
     }
 
-    private List<CursOnDate> getResult() throws ParseException {
+    private List<CursOnDate> getResult() {
         CursOnDate cursOnDate1 = new CursOnDate();
         cursOnDate1.setCode("USD");
         cursOnDate1.setCurs(new BigDecimal("5801.0000"));
-        cursOnDate1.setDate(parseDate("1997-08-02"));
+        cursOnDate1.setDate("1997-08-02");
 
         CursOnDate cursOnDate2 = new CursOnDate();
         cursOnDate2.setCode("USD");
         cursOnDate2.setCurs(new BigDecimal("6.2410"));
-        cursOnDate2.setDate(parseDate("1998-08-02"));
+        cursOnDate2.setDate("1998-08-02");
 
         List<CursOnDate> list = new LinkedList<>();
         list.add(cursOnDate1);
         list.add(cursOnDate2);
 
         return list;
-    }
-
-    private Date parseDate(String strDate) throws ParseException {
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-
-        var date = new GregorianCalendar();
-        date.setTime(df.parse(strDate));
-        date.add(Calendar.DATE, 1);
-
-        return date.getTime();
     }
 
 }

@@ -28,16 +28,18 @@ public class ValuteService {
     @Cacheable(value = "curs-cache", key = "#key")
     public CursOnDate getCursByCodeAndDate(String code, GregorianCalendar calendar, String key) {
 
+        String date = calendar.toZonedDateTime().format(DateTimeFormatter.ISO_LOCAL_DATE);
+
         log.info(
                 "Request with code {} on date {}",
                 code.toUpperCase(),
-                calendar.toZonedDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                date
         );
 
         try {
             var curse = getCursByCodeAndDateInner(code, calendar);
             if (curse == null) return null;
-            return cursMapper.toCursOnDate(curse, calendar);
+            return cursMapper.toCursOnDate(curse, date);
         } catch (NullPointerException e) {
             throw new NotFoundException(String.format("Curs by %s code not found", code));
         }

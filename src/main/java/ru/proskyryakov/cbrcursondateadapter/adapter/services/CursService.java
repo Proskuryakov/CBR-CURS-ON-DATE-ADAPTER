@@ -11,7 +11,6 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
-import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,17 +32,8 @@ public class CursService {
                 .collect(Collectors.toList());
     }
 
-    @SneakyThrows
     public CursOnDate getCursByCodeAndDate(String code, String strDate) {
-        GregorianCalendar calendar;
-        try {
-            DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-            calendar = new GregorianCalendar();
-            calendar.setTime(df.parse(strDate));
-            calendar.add(Calendar.DATE, 1);
-        } catch (ParseException e) {
-            throw new DateConversionException(String.format("Incorrect date %s", strDate));
-        }
+        GregorianCalendar calendar = parseDate(strDate);
         return valuteService.getCursByCodeAndDate(code, calendar, genKey(code, calendar));
     }
 
@@ -55,5 +45,17 @@ public class CursService {
         return codes.stream()
                 .map(code -> valuteService.getCursByCodeAndDate(code, calendar, genKey(code, calendar)))
                 .collect(Collectors.toList());
+    }
+
+    @SneakyThrows
+    private GregorianCalendar parseDate(String strDate) {
+        try {
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+            GregorianCalendar calendar = new GregorianCalendar();
+            calendar.setTime(df.parse(strDate));
+            return calendar;
+        } catch (ParseException e) {
+            throw new DateConversionException(String.format("Incorrect date %s", strDate));
+        }
     }
 }
