@@ -18,10 +18,8 @@ public class CursController {
 
     @RabbitLogging
     @GetMapping("/{code}")
-    public CursOnDate getCursByCode(@PathVariable String code) throws NotFoundException {
-        var result = cursService.getCursByCode(code);
-        if(result == null) throw new NotFoundException(String.format("Curs by %s code not found", code));
-        return result;
+    public CursOnDate getCursByCode(@PathVariable String code) {
+        return cursService.getCursByCode(code);
     }
 
     @RabbitLogging

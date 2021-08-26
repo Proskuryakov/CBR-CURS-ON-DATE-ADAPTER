@@ -38,7 +38,6 @@ public class ValuteService {
 
         try {
             var curse = getCursByCodeAndDateInner(code, calendar);
-            if (curse == null) return null;
             return cursMapper.toCursOnDate(curse, date);
         } catch (NullPointerException e) {
             throw new NotFoundException(String.format("Curs by %s code not found", code));
